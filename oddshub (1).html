@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OddsHub">
+<meta name="theme-color" content="#060608">
+<title>OddsHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #060608;
+  --s1: #0e0e12;
+  --s2: #16161c;
+  --s3: #1e1e26;
+  --border: #2c2c38;
+  --border2: #3a3a48;
+  --text: #e4e4ee;
+  --muted: #5a5a72;
+  --muted2: #7a7a92;
+  --green: #00e87a;
+  --red: #ff4060;
+  --yellow: #ffc820;
+  --blue: #4d9fff;
+  --mono: 'DM Mono', monospace;
+  --display: 'Oswald', sans-serif;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;display:flex;flex-direction:column}
+
+/* ── SETUP SCREEN ── */
+#setupScreen{
+  position:fixed;inset:0;background:var(--bg);z-index:999;
+  display:flex;flex-direction:column;overflow-y:auto;
+  padding:calc(var(--safe-t) + 24px) 20px calc(var(--safe-b) + 24px);
+}
+.setup-logo{
+  font-family:var(--display);font-size:32px;font-weight:700;
+  letter-spacing:3px;color:var(--green);text-transform:uppercase;
+  margin-bottom:4px;
+}
+.setup-logo span{color:var(--text)}
+.setup-sub{font-size:11px;color:var(--muted);margin-bottom:28px;letter-spacing:.5px}
+.setup-step{
+  background:var(--s1);border:1px solid var(--border);border-radius:8px;
+  padding:18px;margin-bottom:16px;
+}
+.setup-step-title{
+  font-family:var(--display);font-size:13px;font-weight:600;
+  letter-spacing:2px;text-transform:uppercase;color:var(--muted2);
+  margin-bottom:12px;display:flex;align-items:center;gap:8px;
+}
+.step-num{
+  width:22px;height:22px;border-radius:50%;background:var(--s3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:var(--green);flex-shrink:0;
+}
+.key-input{
+  width:100%;background:var(--bg);border:1px solid var(--border);
+  border-radius:6px;color:var(--text);font-family:var(--mono);font-size:12px;
+  padding:11px 14px;outline:none;letter-spacing:.5px;
+}
+.key-input:focus{border-color:var(--green)}
+.key-hint{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.5}
+.key-hint a{color:var(--blue);text-decoration:none}
+.load-books-btn{
+  margin-top:12px;width:100%;padding:11px;background:var(--s3);
+  border:1px solid var(--border2);border-radius:6px;
+  font-family:var(--display);font-size:14px;font-weight:600;
+  letter-spacing:1.5px;color:var(--text);cursor:pointer;transition:all .2s;
+}
+.load-books-btn:hover{border-color:var(--green);color:var(--green)}
+.load-books-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* bookmaker grid */
+#booksGrid{display:none;margin-top:14px}
+.books-search{
+  width:100%;background:var(--bg);border:1px solid var(--border);
+  border-radius:6px;color:var(--text);font-family:var(--mono);font-size:12px;
+  padding:9px 14px;outline:none;margin-bottom:10px;
+}
+.books-search:focus{border-color:var(--green)}
+.books-count{font-size:10px;color:var(--muted);margin-bottom:8px}
+.books-list{display:flex;flex-direction:column;gap:4px;max-height:320px;overflow-y:auto}
+.book-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 12px;background:var(--s2);border-radius:5px;
+  cursor:pointer;transition:background .15s;border:1px solid transparent;
+  user-select:none;
+}
+.book-item:hover{background:var(--s3)}
+.book-item.selected{background:rgba(0,232,122,.08);border-color:rgba(0,232,122,.25)}
+.book-item-name{font-size:12px;color:var(--text)}
+.book-check{
+  width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:all .15s;font-size:11px;
+}
+.book-item.selected .book-check{background:var(--green);border-color:var(--green);color:#000}
+
+.start-btn{
+  width:100%;padding:16px;background:var(--green);border:none;border-radius:8px;
+  font-family:var(--display);font-size:18px;font-weight:700;letter-spacing:2px;
+  color:#000;cursor:pointer;margin-top:16px;transition:all .2s;
+  opacity:.4;pointer-events:none;
+}
+.start-btn.ready{opacity:1;pointer-events:auto}
+.start-btn.ready:hover{background:#00cc6a}
+
+/* ── MAIN APP ── */
+#app{display:none;flex-direction:column;height:100%}
+
+/* header */
+.header{
+  flex-shrink:0;
+  padding:calc(var(--safe-t) + 10px) 16px 10px;
+  background:var(--s1);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.logo{font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:2px;color:var(--green);text-transform:uppercase}
+.logo span{color:var(--text)}
+.header-right{display:flex;align-items:center;gap:10px}
+.my-books-pill{
+  font-size:10px;color:var(--muted);background:var(--s2);
+  border:1px solid var(--border);border-radius:12px;padding:4px 10px;
+  cursor:pointer;transition:all .2s;
+}
+.my-books-pill:hover{border-color:var(--green);color:var(--green)}
+.settings-btn{
+  background:none;border:1px solid var(--border);border-radius:6px;
+  color:var(--muted);font-size:16px;padding:4px 9px;cursor:pointer;transition:all .2s;
+}
+.settings-btn:hover{border-color:var(--muted2);color:var(--text)}
+
+/* tabs */
+.tabs{
+  flex-shrink:0;display:flex;background:var(--s1);
+  border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;
+}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex:0 0 auto;padding:13px 18px;font-family:var(--display);font-size:12px;
+  font-weight:600;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;
+  transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;
+  white-space:nowrap;
+}
+.tab.on{color:var(--green);border-bottom-color:var(--green)}
+
+/* panels */
+.panels{flex:1;overflow:hidden;position:relative}
+.panel{display:none;height:100%;overflow-y:auto;flex-direction:column}
+.panel.on{display:flex}
+
+/* toolbar */
+.toolbar{
+  flex-shrink:0;padding:10px 14px;background:var(--s1);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.toolbar-label{font-size:10px;color:var(--muted);letter-spacing:.5px;white-space:nowrap}
+.sel{
+  background:var(--bg);border:1px solid var(--border);border-radius:5px;
+  color:var(--text);font-family:var(--mono);font-size:11px;
+  padding:6px 10px;outline:none;cursor:pointer;flex:1;min-width:100px;
+}
+.sel:focus{border-color:var(--green)}
+.inp{
+  background:var(--bg);border:1px solid var(--border);border-radius:5px;
+  color:var(--text);font-family:var(--mono);font-size:11px;
+  padding:6px 10px;outline:none;width:60px;
+}
+.inp:focus{border-color:var(--green)}
+.go-btn{
+  background:var(--green);border:none;border-radius:5px;
+  font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:1px;
+  color:#000;padding:7px 16px;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0;
+}
+.go-btn:hover{background:#00cc6a}
+.go-btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed}
+
+/* refresh row */
+.refresh-row{
+  flex-shrink:0;padding:8px 14px;background:var(--s1);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.auto-toggle{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
+.tog{
+  width:30px;height:17px;background:var(--border);border-radius:9px;
+  position:relative;transition:background .2s;flex-shrink:0;
+}
+.tog::after{
+  content:'';position:absolute;top:2.5px;left:2.5px;
+  width:12px;height:12px;border-radius:50%;background:var(--muted);transition:all .2s;
+}
+.tog.on{background:rgba(0,232,122,.25)}
+.tog.on::after{left:15.5px;background:var(--green)}
+.auto-label{font-size:10px;color:var(--muted)}
+.last-update{font-size:10px;color:var(--muted)}
+
+/* state boxes */
+.state{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:48px 24px;gap:14px;text-align:center;
+}
+.state-ico{font-size:44px;opacity:.3}
+.state-title{font-family:var(--display);font-size:17px;font-weight:600;letter-spacing:1px;color:var(--muted2)}
+.state-desc{font-size:11px;color:var(--muted);line-height:1.7;max-width:260px}
+.spin{
+  width:26px;height:26px;border:2px solid var(--border);border-top-color:var(--green);
+  border-radius:50%;animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err-box{
+  margin:14px;padding:12px 14px;background:rgba(255,64,96,.08);
+  border:1px solid rgba(255,64,96,.25);border-radius:6px;
+  font-size:11px;color:var(--red);line-height:1.6;
+}
+
+/* section header */
+.sec-head{
+  flex-shrink:0;padding:10px 14px 6px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.sec-title{font-family:var(--display);font-size:11px;font-weight:600;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+.cnt{
+  font-family:var(--display);font-size:11px;font-weight:700;
+  background:var(--green);color:#000;padding:2px 7px;border-radius:10px;
+}
+
+/* cards */
+.cards{padding:0 14px 14px;display:flex;flex-direction:column;gap:8px}
+.card{
+  background:var(--s1);border:1px solid var(--border);border-radius:8px;
+  overflow:hidden;
+}
+
+/* card header */
+.ch{
+  padding:11px 13px 9px;border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-start;justify-content:space-between;gap:8px;
+}
+.match{font-family:var(--display);font-size:15px;font-weight:600;letter-spacing:.3px;line-height:1.2}
+.vs{color:var(--muted);font-weight:300;margin:0 3px}
+.meta{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.5}
+
+/* badge */
+.badge{
+  flex-shrink:0;font-family:var(--display);font-size:14px;font-weight:700;
+  padding:4px 10px;border-radius:5px;letter-spacing:.5px;
+}
+.bg{background:rgba(0,232,122,.12);color:var(--green);border:1px solid rgba(0,232,122,.25)}
+.br{background:rgba(255,64,96,.12);color:var(--red);border:1px solid rgba(255,64,96,.25)}
+.by{background:rgba(255,200,32,.12);color:var(--yellow);border:1px solid rgba(255,200,32,.25)}
+.bb{background:rgba(77,159,255,.12);color:var(--blue);border:1px solid rgba(77,159,255,.25)}
+
+/* card body */
+.cb{padding:11px 13px;display:flex;flex-direction:column;gap:8px}
+
+/* legs */
+.leg{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--s2);border-radius:5px;padding:8px 11px;gap:8px;
+}
+.leg-left{flex:1}
+.leg-book{font-size:10px;color:var(--green);font-weight:500;letter-spacing:.3px}
+.leg-side{font-size:12px;color:var(--text);margin-top:2px}
+.leg-odds{font-family:var(--display);font-size:22px;font-weight:700;color:var(--text);letter-spacing:.5px}
+.leg-link{
+  display:inline-block;font-size:10px;color:var(--blue);
+  border:1px solid rgba(77,159,255,.25);border-radius:3px;
+  padding:2px 7px;margin-top:3px;text-decoration:none;
+}
+
+/* stakes */
+.stakes{display:flex;gap:6px;flex-wrap:wrap}
+.stake{flex:1;min-width:110px;background:var(--s2);border-radius:5px;padding:8px 10px}
+.stake-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.stake-v{font-size:12px;color:var(--text);font-weight:500}
+.stake-ret{font-size:12px;color:var(--green);font-weight:500}
+
+/* value bet grid */
+.vb-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.vb-cell{background:var(--s2);border-radius:5px;padding:8px 10px}
+.vb-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.vb-val{font-family:var(--display);font-size:21px;font-weight:700}
+
+/* dropping */
+.drop-track{height:3px;background:var(--border);border-radius:2px;margin-top:6px;overflow:hidden}
+.drop-fill{height:100%;background:var(--red);border-radius:2px}
+.odds-move{display:flex;align-items:center;gap:8px}
+.odds-old{font-family:var(--display);font-size:17px;font-weight:600;color:var(--muted);text-decoration:line-through}
+.odds-new{font-family:var(--display);font-size:17px;font-weight:700;color:var(--red)}
+.arrow{color:var(--red);font-size:13px}
+
+/* comparador */
+.cmp-events{flex:1;overflow-y:auto}
+.event-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;
+  transition:background .15s;gap:8px;
+}
+.event-row:hover{background:var(--s2)}
+.event-row:active{background:var(--s3)}
+.ev-name{font-family:var(--display);font-size:14px;font-weight:500;letter-spacing:.3px}
+.ev-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.ev-arrow{color:var(--muted);font-size:18px}
+.search-bar{
+  flex-shrink:0;padding:10px 14px;background:var(--s1);border-bottom:1px solid var(--border);
+}
+.search-inp{
+  width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;
+  color:var(--text);font-family:var(--mono);font-size:12px;padding:8px 12px;outline:none;
+}
+.search-inp:focus{border-color:var(--green)}
+
+/* odds table */
+.odds-table{padding:0 14px 14px}
+.odds-head{
+  display:flex;justify-content:flex-end;gap:4px;
+  padding:6px 0;font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;
+}
+.odds-head span{min-width:52px;text-align:center}
+.bm-row{
+  display:flex;align-items:center;padding:8px 10px;
+  background:var(--s2);border-radius:5px;margin-bottom:4px;gap:8px;
+}
+.bm-name{flex:1;font-size:11px;color:var(--text)}
+.bm-cells{display:flex;gap:4px}
+.bm-cell{
+  min-width:52px;text-align:center;font-family:var(--display);
+  font-size:16px;font-weight:600;padding:4px 6px;
+  background:var(--s3);border-radius:4px;
+}
+.bm-cell.best{color:var(--green);background:rgba(0,232,122,.1)}
+.bm-cell.worst{color:var(--muted)}
+
+/* bookmakers panel */
+.books-panel{
+  display:none;position:fixed;inset:0;background:var(--bg);z-index:500;
+  flex-direction:column;padding:calc(var(--safe-t) + 14px) 0 calc(var(--safe-b) + 14px);
+}
+.books-panel.open{display:flex}
+.books-panel-head{
+  padding:0 14px 12px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.books-panel-title{font-family:var(--display);font-size:18px;font-weight:700;letter-spacing:1px;color:var(--green)}
+.close-btn{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:0 4px}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ SETUP ═══════════════════ -->
+<div id="setupScreen">
+  <div class="setup-logo">Odds<span>Hub</span></div>
+  <div class="setup-sub">CONFIGURACIÓN INICIAL — SOLO UNA VEZ</div>
+
+  <div class="setup-step">
+    <div class="setup-step-title"><div class="step-num">1</div> API KEY</div>
+    <input class="key-input" id="setupKey" type="password" placeholder="Pegá tu API key de odds-api.io" autocomplete="off" oninput="onKeyInput()">
+    <div class="key-hint">Conseguila gratis en <a href="https://odds-api.io/#pricing" target="_blank">odds-api.io/#pricing</a></div>
+    <button class="load-books-btn" id="loadBooksBtn" onclick="loadBookmakers()" disabled>CARGAR CASAS DE APUESTAS →</button>
+  </div>
+
+  <div class="setup-step" id="step2" style="display:none">
+    <div class="setup-step-title"><div class="step-num">2</div> TUS CASAS DE APUESTAS</div>
+    <div id="booksGrid">
+      <input class="books-search" id="booksSearch" placeholder="🔍 Buscar casa..." oninput="filterBooks()">
+      <div class="books-count" id="booksCount"></div>
+      <div class="books-list" id="booksList"></div>
+    </div>
+  </div>
+
+  <button class="start-btn" id="startBtn" onclick="startApp()">ENTRAR →</button>
+</div>
+
+<!-- ═══════════════════ APP ═══════════════════ -->
+<div id="app">
+
+  <div class="header">
+    <div class="logo">Odds<span>Hub</span></div>
+    <div class="header-right">
+      <div class="my-books-pill" onclick="openBooksPanel()" id="booksPill">⚙ mis casas</div>
+      <button class="settings-btn" onclick="goSetup()">↺</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" onclick="switchTab('arb',this)">🔄 ARBITRAJE</button>
+    <button class="tab" onclick="switchTab('value',this)">💎 VALUE</button>
+    <button class="tab" onclick="switchTab('compare',this)">📊 CUOTAS</button>
+    <button class="tab" onclick="switchTab('drop',this)">📉 DROPPING</button>
+  </div>
+
+  <div class="panels">
+
+    <!-- ARBITRAJE -->
+    <div class="panel on" id="panel-arb">
+      <div class="toolbar">
+        <span class="toolbar-label">PROFIT MÍN %</span>
+        <input class="inp" id="arbMinProfit" type="number" value="0" min="0" max="20" step="0.1" style="width:65px">
+        <span class="toolbar-label">LÍMITE</span>
+        <input class="inp" id="arbLimit" type="number" value="100" min="1" max="500" style="width:65px">
+        <button class="go-btn" onclick="fetchArb()">ESCANEAR</button>
+      </div>
+      <div class="refresh-row">
+        <label class="auto-toggle" onclick="toggleAuto('arb')">
+          <div class="tog" id="tog-arb"></div>
+          <span class="auto-label">Auto 30s</span>
+        </label>
+        <span class="last-update" id="upd-arb"></span>
+      </div>
+      <div id="arb-body" style="flex:1;overflow-y:auto">
+        <div class="state">
+          <div class="state-ico">🔄</div>
+          <div class="state-title">LISTO PARA ESCANEAR</div>
+          <div class="state-desc">Tocá ESCANEAR para buscar arbitrajes entre tus casas configuradas</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VALUE BETS -->
+    <div class="panel" id="panel-value">
+      <div class="toolbar">
+        <span class="toolbar-label">CASA</span>
+        <select class="sel" id="vbBook"></select>
+        <span class="toolbar-label">EV MÍN %</span>
+        <input class="inp" id="vbMinEV" type="number" value="3" min="0" max="50" style="width:55px">
+        <button class="go-btn" onclick="fetchValue()">BUSCAR</button>
+      </div>
+      <div class="refresh-row">
+        <label class="auto-toggle" onclick="toggleAuto('value')">
+          <div class="tog" id="tog-value"></div>
+          <span class="auto-label">Auto 30s</span>
+        </label>
+        <span class="last-update" id="upd-value"></span>
+      </div>
+      <div id="value-body" style="flex:1;overflow-y:auto">
+        <div class="state">
+          <div class="state-ico">💎</div>
+          <div class="state-title">VALUE BETS</div>
+          <div class="state-desc">Seleccioná una casa y buscá oportunidades con EV positivo</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPARADOR -->
+    <div class="panel" id="panel-compare">
+      <div class="toolbar">
+        <select class="sel" id="cmpSport">
+          <option value="football">⚽ Fútbol</option>
+          <option value="basketball">🏀 Basketball</option>
+          <option value="tennis">🎾 Tenis</option>
+          <option value="american-football">🏈 Américano</option>
+          <option value="ice-hockey">🏒 Hockey</option>
+          <option value="baseball">⚾ Baseball</option>
+          <option value="mma">🥊 MMA</option>
+        </select>
+        <button class="go-btn" onclick="fetchEvents()">CARGAR</button>
+      </div>
+      <div class="search-bar" id="searchBar" style="display:none">
+        <input class="search-inp" id="eventSearch" placeholder="🔍 Buscar partido..." oninput="filterEvents()">
+      </div>
+      <div class="cmp-events" id="compare-body">
+        <div class="state">
+          <div class="state-ico">📊</div>
+          <div class="state-title">COMPARADOR</div>
+          <div class="state-desc">Cargá los eventos de un deporte y tocá un partido para ver las cuotas de tus casas</div>
+        </div>
+      </div>
+      <div id="odds-panel" style="display:none;flex-shrink:0;max-height:55%;overflow-y:auto;border-top:2px solid var(--border)"></div>
+    </div>
+
+    <!-- DROPPING ODDS -->
+    <div class="panel" id="panel-drop">
+      <div class="toolbar">
+        <select class="sel" id="dropSport">
+          <option value="">Todos</option>
+          <option value="football">⚽ Fútbol</option>
+          <option value="basketball">🏀 Basketball</option>
+          <option value="tennis">🎾 Tenis</option>
+          <option value="american-football">🏈 Américano</option>
+          <option value="ice-hockey">🏒 Hockey</option>
+          <option value="mma">🥊 MMA</option>
+        </select>
+        <select class="sel" id="dropWindow" style="flex:0.8;min-width:85px">
+          <option value="opening">Apertura</option>
+          <option value="12h">12 hs</option>
+          <option value="24h" selected>24 hs</option>
+          <option value="48h">48 hs</option>
+        </select>
+        <input class="inp" id="dropMin" type="number" value="10" min="0" max="100" style="width:55px">
+        <button class="go-btn" onclick="fetchDrop()">VER</button>
+      </div>
+      <div class="refresh-row">
+        <label class="auto-toggle" onclick="toggleAuto('drop')">
+          <div class="tog" id="tog-drop"></div>
+          <span class="auto-label">Auto 60s</span>
+        </label>
+        <span class="last-update" id="upd-drop"></span>
+      </div>
+      <div id="drop-body" style="flex:1;overflow-y:auto">
+        <div class="state">
+          <div class="state-ico">📉</div>
+          <div class="state-title">DROPPING ODDS</div>
+          <div class="state-desc">Seguí los movimientos de líneas de las casas sharp</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MY BOOKS PANEL -->
+<div class="books-panel" id="booksPanel">
+  <div class="books-panel-head">
+    <div class="books-panel-title">MIS CASAS</div>
+    <button class="close-btn" onclick="closeBooksPanel()">×</button>
+  </div>
+  <div style="padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0">
+    <input class="books-search" id="panelSearch" placeholder="🔍 Buscar..." oninput="filterPanelBooks()">
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:10px 14px" id="panelBooksList"></div>
+  <div style="padding:12px 14px;border-top:1px solid var(--border);flex-shrink:0">
+    <button class="go-btn" style="width:100%" onclick="savePanelBooks()">GUARDAR CAMBIOS</button>
+  </div>
+</div>
+
+<script>
+const PROXY = 'https://oddshub-proxy.tanogralatto.workers.dev';
+let apiKey = localStorage.getItem('oh_key') || '';
+let myBooks = JSON.parse(localStorage.getItem('oh_books') || '[]'); // selected names
+let allBookmakers = [];
+let allEvents = [];
+let autoTimers = {};
+let autoIntervals = { arb: 30000, value: 30000, drop: 60000 };
+
+// ═══ SETUP ═══
+function onKeyInput() {
+  const v = document.getElementById('setupKey').value.trim();
+  document.getElementById('loadBooksBtn').disabled = !v;
+}
+
+async function loadBookmakers() {
+  const key = document.getElementById('setupKey').value.trim();
+  if (!key) return;
+  const btn = document.getElementById('loadBooksBtn');
+  btn.disabled = true;
+  btn.textContent = 'Cargando...';
+  try {
+    const res = await fetch(`${PROXY}/api/bookmakers`);
+    if (!res.ok) throw new Error(`Error ${res.status}`);
+    const data = await res.json();
+    allBookmakers = data.filter(b => b.active).map(b => b.name).sort();
+    renderSetupBooks();
+    document.getElementById('step2').style.display = 'block';
+    document.getElementById('booksGrid').style.display = 'block';
+    btn.textContent = '✓ CASAS CARGADAS';
+    document.getElementById('step2').scrollIntoView({ behavior: 'smooth' });
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'CARGAR CASAS DE APUESTAS →';
+    alert('Error al conectar: ' + e.message + '\nVerificá tu API key.');
+  }
+}
+
+function renderSetupBooks(filter = '') {
+  const q = filter.toLowerCase();
+  const filtered = allBookmakers.filter(b => b.toLowerCase().includes(q));
+  document.getElementById('booksCount').textContent = `${myBooks.length} seleccionadas · ${filtered.length} disponibles`;
+  document.getElementById('booksList').innerHTML = filtered.map(b => `
+    <div class="book-item ${myBooks.includes(b) ? 'selected' : ''}" onclick="toggleBook('${b.replace(/'/g,"\\'")}', this)">
+      <span class="book-item-name">${b}</span>
+      <div class="book-check">${myBooks.includes(b) ? '✓' : ''}</div>
+    </div>`).join('');
+  updateStartBtn();
+}
+
+function filterBooks() {
+  renderSetupBooks(document.getElementById('booksSearch').value);
+}
+
+function toggleBook(name, el) {
+  const idx = myBooks.indexOf(name);
+  if (idx >= 0) myBooks.splice(idx, 1);
+  else myBooks.push(name);
+  el.classList.toggle('selected');
+  el.querySelector('.book-check').textContent = myBooks.includes(name) ? '✓' : '';
+  document.getElementById('booksCount').textContent = `${myBooks.length} seleccionadas · ${allBookmakers.length} disponibles`;
+  updateStartBtn();
+}
+
+function updateStartBtn() {
+  const btn = document.getElementById('startBtn');
+  if (myBooks.length > 0) {
+    btn.classList.add('ready');
+  } else {
+    btn.classList.remove('ready');
+  }
+}
+
+function startApp() {
+  if (!myBooks.length) return;
+  localStorage.setItem('oh_books', JSON.stringify(myBooks));
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  initApp();
+}
+
+function goSetup() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('setupScreen').style.display = 'flex';
+  document.getElementById('setupKey').value = apiKey;
+  document.getElementById('loadBooksBtn').disabled = false;
+}
+
+// ═══ APP INIT ═══
+function initApp() {
+  // populate value bets book selector
+  const sel = document.getElementById('vbBook');
+  sel.innerHTML = myBooks.map(b => `<option value="${b}">${b}</option>`).join('');
+  // pill
+  document.getElementById('booksPill').textContent = `⚙ ${myBooks.length} casas`;
+  // auto-fetch arb on open
+  fetchArb();
+}
+
+// check if already configured on load
+window.addEventListener('load', () => {
+  if (myBooks.length) {
+    document.getElementById('setupScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    initApp();
+  }
+});
+
+// ═══ TABS ═══
+function switchTab(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.getElementById('panel-' + id).classList.add('on');
+  el.classList.add('on');
+}
+
+// ═══ AUTO REFRESH ═══
+function toggleAuto(key) {
+  const tog = document.getElementById('tog-' + key);
+  if (tog.classList.contains('on')) {
+    tog.classList.remove('on');
+    clearInterval(autoTimers[key]);
+    delete autoTimers[key];
+  } else {
+    tog.classList.add('on');
+    const fn = key === 'arb' ? fetchArb : key === 'value' ? fetchValue : fetchDrop;
+    autoTimers[key] = setInterval(fn, autoIntervals[key]);
+  }
+}
+
+// ═══ HELPERS ═══
+function setLoading(id) {
+  document.getElementById(id).innerHTML = `<div class="state"><div class="spin"></div><div style="font-size:11px;color:var(--muted)">Consultando API...</div></div>`;
+}
+function setErr(id, msg) {
+  document.getElementById(id).innerHTML = `<div class="err-box">❌ ${msg}</div>`;
+}
+function setTs(id) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = new Date().toLocaleTimeString('es-AR');
+}
+function fmt(v) { const n = parseFloat(v); return isNaN(n) ? (v||'—') : n.toFixed(2); }
+function fmtDate(d) {
+  if (!d) return '';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'}) + ' ' + dt.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+}
+async function apiFetch(path) {
+  const r = await fetch(`${PROXY}/api${path}`);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+// ═══ ARBITRAJE ═══
+async function fetchArb() {
+  if (!myBooks.length) return;
+  const minP = parseFloat(document.getElementById('arbMinProfit').value) || 0;
+  const limit = document.getElementById('arbLimit').value || 100;
+  const books = myBooks.join(',');
+  setLoading('arb-body');
+  try {
+    const data = await apiFetch(`/arbitrage-bets?bookmakers=${encodeURIComponent(books)}&limit=${limit}&includeEventDetails=true`);
+    const arr = Array.isArray(data) ? data : [];
+    const filtered = arr.filter(a => (a.profitMargin || 0) * 100 >= minP)
+      .sort((a,b) => (b.profitMargin||0) - (a.profitMargin||0));
+    renderArb(filtered);
+    setTs('upd-arb');
+  } catch(e) { setErr('arb-body', e.message); }
+}
+
+function renderArb(data) {
+  if (!data.length) {
+    document.getElementById('arb-body').innerHTML = `
+      <div class="state">
+        <div class="state-ico">🔍</div>
+        <div class="state-title">SIN ARBITRAJES</div>
+        <div class="state-desc">No hay oportunidades ahora entre tus casas. Activá auto-refresh para monitorear en tiempo real.</div>
+      </div>`;
+    return;
+  }
+  const html = `
+    <div class="sec-head"><span class="sec-title">OPORTUNIDADES</span><span class="cnt">${data.length}</span></div>
+    <div class="cards">
+      ${data.map(a => {
+        const profit = ((a.profitMargin||0)*100).toFixed(2);
+        const ev = a.event || {};
+        return `<div class="card">
+          <div class="ch">
+            <div>
+              <div class="match">${ev.home||'—'}<span class="vs">vs</span>${ev.away||'—'}</div>
+              <div class="meta">${ev.league||''} · ${ev.sport||''} · ${fmtDate(ev.date)}${a.market?' · '+a.market.name+(a.market.hdp?' ('+a.market.hdp+')':''):''}</div>
+            </div>
+            <div class="badge bg">+${profit}%</div>
+          </div>
+          <div class="cb">
+            <div style="display:flex;flex-direction:column;gap:5px">
+              ${(a.legs||[]).map(l=>`
+                <div class="leg">
+                  <div class="leg-left">
+                    <div class="leg-book">${l.bookmaker}</div>
+                    <div class="leg-side">${l.label||l.side||''}</div>
+                    ${(l.directLink||l.href)?`<a class="leg-link" href="${l.directLink||l.href}" target="_blank">Apostar →</a>`:''}
+                  </div>
+                  <div class="leg-odds">${fmt(l.odds)}</div>
+                </div>`).join('')}
+            </div>
+            ${(a.optimalStakes||[]).length?`
+              <div class="stakes">
+                ${a.optimalStakes.map(s=>`
+                  <div class="stake">
+                    <div class="stake-lbl">${s.bookmaker}</div>
+                    <div class="stake-v">Stake: ${s.stake?s.stake.toFixed(2):'—'}</div>
+                    <div class="stake-ret">Retorno: ${s.potentialReturn?s.potentialReturn.toFixed(2):'—'}</div>
+                  </div>`).join('')}
+              </div>`:''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  document.getElementById('arb-body').innerHTML = html;
+}
+
+// ═══ VALUE BETS ═══
+async function fetchValue() {
+  const book = document.getElementById('vbBook').value;
+  const minEV = parseFloat(document.getElementById('vbMinEV').value)/100 || 0.03;
+  if (!book) return;
+  setLoading('value-body');
+  try {
+    const data = await apiFetch(`/value-bets?bookmaker=${encodeURIComponent(book)}&includeEventDetails=true`);
+    const arr = Array.isArray(data) ? data : [];
+    const filtered = arr.filter(b => b.expectedValue >= minEV).sort((a,b)=>b.expectedValue-a.expectedValue);
+    renderValue(filtered);
+    setTs('upd-value');
+  } catch(e) { setErr('value-body', e.message); }
+}
+
+function renderValue(data) {
+  if (!data.length) {
+    document.getElementById('value-body').innerHTML = `<div class="state"><div class="state-ico">💎</div><div class="state-title">SIN RESULTADOS</div><div class="state-desc">No hay value bets que superen el EV mínimo en este momento</div></div>`;
+    return;
+  }
+  const html = `
+    <div class="sec-head"><span class="sec-title">VALUE BETS</span><span class="cnt">${data.length}</span></div>
+    <div class="cards">
+      ${data.map(vb => {
+        const ev = (vb.expectedValue*100).toFixed(2);
+        const ev2 = vb.expectedValue >= 0.05;
+        const o = vb.bookmakerOdds||{};
+        const betOdds = o[vb.betSide]||'—';
+        const ev2 = vb.event||{};
+        return `<div class="card">
+          <div class="ch">
+            <div>
+              <div class="match">${ev2.home||'—'}<span class="vs">vs</span>${ev2.away||'—'}</div>
+              <div class="meta">${ev2.league||''} · ${fmtDate(ev2.date)}${vb.market?' · '+vb.market.name:''}</div>
+            </div>
+            <div class="badge ${vb.expectedValue>=0.05?'bg':'by'}">EV +${ev}%</div>
+          </div>
+          <div class="cb">
+            <div class="vb-grid">
+              <div class="vb-cell"><div class="vb-lbl">Apostar</div><div class="vb-val" style="font-size:16px;color:var(--text)">${(vb.betSide||'').toUpperCase()}</div></div>
+              <div class="vb-cell"><div class="vb-lbl">Cuota</div><div class="vb-val" style="color:var(--green)">${fmt(betOdds)}</div></div>
+              <div class="vb-cell"><div class="vb-lbl">Expected Value</div><div class="vb-val" style="color:${vb.expectedValue>=0.05?'var(--green)':'var(--yellow)'}">+${ev}%</div></div>
+              <div class="vb-cell"><div class="vb-lbl">Casa</div><div class="vb-val" style="font-size:13px;color:var(--blue)">${vb.bookmaker||'—'}</div></div>
+            </div>
+            ${o.href?`<a class="leg-link" href="${o.href}" target="_blank">Apostar en ${vb.bookmaker} →</a>`:''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  document.getElementById('value-body').innerHTML = html;
+}
+
+// ═══ COMPARADOR ═══
+async function fetchEvents() {
+  const sport = document.getElementById('cmpSport').value;
+  setLoading('compare-body');
+  document.getElementById('odds-panel').style.display = 'none';
+  document.getElementById('searchBar').style.display = 'none';
+  try {
+    const data = await apiFetch(`/events?sport=${sport}&limit=150`);
+    allEvents = Array.isArray(data) ? data : (data.data||data.events||[]);
+    document.getElementById('searchBar').style.display = 'block';
+    renderEvents(allEvents);
+  } catch(e) { setErr('compare-body', e.message); }
+}
+
+function filterEvents() {
+  const q = document.getElementById('eventSearch').value.toLowerCase();
+  renderEvents(allEvents.filter(ev => `${ev.home||''} ${ev.away||''} ${ev.league||''}`.toLowerCase().includes(q)));
+}
+
+function renderEvents(evs) {
+  if (!evs.length) {
+    document.getElementById('compare-body').innerHTML = `<div class="state"><div class="state-ico">📅</div><div class="state-title">SIN EVENTOS</div></div>`;
+    return;
+  }
+  document.getElementById('compare-body').innerHTML = evs.slice(0,100).map(ev=>`
+    <div class="event-row" onclick="fetchOdds(${ev.id||ev.eventId})">
+      <div>
+        <div class="ev-name">${ev.home||'—'} <span style="color:var(--muted)">vs</span> ${ev.away||'—'}</div>
+        <div class="ev-meta">${ev.league||''} · ${fmtDate(ev.date)}</div>
+      </div>
+      <div class="ev-arrow">›</div>
+    </div>`).join('');
+}
+
+async function fetchOdds(eventId) {
+  const panel = document.getElementById('odds-panel');
+  panel.style.display = 'block';
+  panel.innerHTML = `<div class="state"><div class="spin"></div></div>`;
+  panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  try {
+    const data = await apiFetch(`/odds?eventId=${eventId}`);
+    renderOdds(data);
+  } catch(e) {
+    panel.innerHTML = `<div class="err-box">❌ ${e.message}</div>`;
+  }
+}
+
+function renderOdds(data) {
+  const panel = document.getElementById('odds-panel');
+  const all = Array.isArray(data) ? data : (data.bookmakers||data.odds||[]);
+  // filter to my books first, then show rest
+  const mine = all.filter(b => myBooks.includes(b.bookmaker||b.name));
+  const others = all.filter(b => !myBooks.includes(b.bookmaker||b.name));
+  const ordered = [...mine, ...others];
+
+  if (!ordered.length) {
+    panel.innerHTML = `<div class="state"><div class="state-ico">📊</div><div class="state-title">SIN CUOTAS</div></div>`;
+    return;
+  }
+
+  // find best per side
+  let bH=0, bD=0, bA=0;
+  ordered.forEach(b => {
+    const o = b.odds||b;
+    if (parseFloat(o.home)>bH) bH=parseFloat(o.home);
+    if (parseFloat(o.draw)>bD) bD=parseFloat(o.draw);
+    if (parseFloat(o.away)>bA) bA=parseFloat(o.away);
+  });
+  const hasDraw = ordered.some(b => (b.odds||b).draw);
+
+  panel.innerHTML = `
+    <div style="padding:10px 14px 6px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0">
+      <span style="font-family:var(--display);font-size:12px;font-weight:600;letter-spacing:1.5px;color:var(--muted)">CUOTAS — ${ordered.length} CASAS <span style="color:var(--green);font-size:10px">(${mine.length} tuyas)</span></span>
+      <button onclick="document.getElementById('odds-panel').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer">×</button>
+    </div>
+    <div class="odds-table">
+      <div class="odds-head">
+        <span>LOCAL</span>
+        ${hasDraw?'<span>X</span>':''}
+        <span>VISIT.</span>
+      </div>
+      ${ordered.map(b => {
+        const bName = b.bookmaker||b.name||'—';
+        const o = b.odds||b;
+        const isMine = myBooks.includes(bName);
+        const h = fmt(o.home), dr = hasDraw?fmt(o.draw):null, a = fmt(o.away);
+        return `
+          <div class="bm-row" style="${isMine?'border:1px solid rgba(0,232,122,.2);background:rgba(0,232,122,.04)':''}">
+            <div class="bm-name">${isMine?'<span style="color:var(--green);font-size:9px">★ </span>':''}${bName}</div>
+            <div class="bm-cells">
+              <div class="bm-cell ${parseFloat(h)===bH?'best':parseFloat(h)<bH-0.2?'worst':''}">${h||'—'}</div>
+              ${hasDraw?`<div class="bm-cell ${parseFloat(dr)===bD?'best':''}">${dr||'—'}</div>`:''}
+              <div class="bm-cell ${parseFloat(a)===bA?'best':parseFloat(a)<bA-0.2?'worst':''}">${a||'—'}</div>
+            </div>
+          </div>`;
+      }).join('')}
+    </div>`;
+}
+
+// ═══ DROPPING ODDS ═══
+async function fetchDrop() {
+  const sport = document.getElementById('dropSport').value;
+  const win = document.getElementById('dropWindow').value;
+  const minD = document.getElementById('dropMin').value||10;
+  setLoading('drop-body');
+  try {
+    let path = `/dropping-odds?timeWindow=${win}&minDrop=${minD}&includeEventDetails=true&limit=100`;
+    if (sport) path += `&sport=${sport}`;
+    const data = await apiFetch(path);
+    renderDrop(Array.isArray(data)?data:(data.data||[]));
+    setTs('upd-drop');
+  } catch(e) { setErr('drop-body', e.message); }
+}
+
+function renderDrop(data) {
+  if (!data.length) {
+    document.getElementById('drop-body').innerHTML = `<div class="state"><div class="state-ico">📉</div><div class="state-title">SIN MOVIMIENTOS</div><div class="state-desc">Bajá el % mínimo o cambiá el período</div></div>`;
+    return;
+  }
+  const html = `
+    <div class="sec-head"><span class="sec-title">MOVIMIENTOS</span><span class="cnt">${data.length}</span></div>
+    <div class="cards">
+      ${data.map(d=>{
+        const o=d.odds||{}, drop=o.drop||{}, ev=d.event||{};
+        const sport=ev.sport?.name||ev.sport||'', league=ev.league?.name||ev.league||'';
+        const dropPct=drop.sinceOpening||drop['24h']||drop['12h']||0;
+        const bar=Math.min(100,Math.abs(dropPct));
+        const w12=drop['12h']?`12h: ${Math.abs(drop['12h']).toFixed(1)}%`:'';
+        const w24=drop['24h']?`24h: ${Math.abs(drop['24h']).toFixed(1)}%`:'';
+        return `<div class="card">
+          <div class="ch">
+            <div>
+              <div class="match">${ev.home||'—'}<span class="vs">vs</span>${ev.away||'—'}</div>
+              <div class="meta">${league} · ${sport} · ${fmtDate(ev.date)}${d.market?' · '+d.market.name+(d.market.hdp?' ('+d.market.hdp+')':''):''}</div>
+            </div>
+            <div class="badge br">↓${Math.abs(dropPct).toFixed(1)}%</div>
+          </div>
+          <div class="cb">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+              <div>
+                <div style="font-size:9px;color:var(--muted);margin-bottom:4px;letter-spacing:.5px">LADO: <span style="color:var(--text);font-weight:500">${(d.betSide||'').toUpperCase()}</span></div>
+                <div class="odds-move">
+                  <span class="odds-old">${fmt(o.opening)}</span>
+                  <span class="arrow">→</span>
+                  <span class="odds-new">${fmt(o.current)}</span>
+                </div>
+              </div>
+              <div style="text-align:right;font-size:10px;color:var(--muted);line-height:1.8">
+                ${w12?`<div>${w12}</div>`:''}
+                ${w24?`<div>${w24}</div>`:''}
+                <div>Apertura: ${Math.abs(drop.sinceOpening||0).toFixed(1)}%</div>
+              </div>
+            </div>
+            <div class="drop-track"><div class="drop-fill" style="width:${bar}%"></div></div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  document.getElementById('drop-body').innerHTML = html;
+}
+
+// ═══ MY BOOKS PANEL ═══
+let panelBooks = [];
+function openBooksPanel() {
+  panelBooks = [...myBooks];
+  renderPanelBooks();
+  document.getElementById('booksPanel').classList.add('open');
+}
+function closeBooksPanel() {
+  document.getElementById('booksPanel').classList.remove('open');
+}
+function filterPanelBooks() {
+  renderPanelBooks(document.getElementById('panelSearch').value);
+}
+function renderPanelBooks(filter='') {
+  const q = filter.toLowerCase();
+  const filtered = allBookmakers.length ? allBookmakers.filter(b=>b.toLowerCase().includes(q)) : panelBooks;
+  document.getElementById('panelBooksList').innerHTML = filtered.map(b=>`
+    <div class="book-item ${panelBooks.includes(b)?'selected':''}" onclick="togglePanelBook('${b.replace(/'/g,"\\'")}', this)" style="margin-bottom:4px">
+      <span class="book-item-name">${b}</span>
+      <div class="book-check">${panelBooks.includes(b)?'✓':''}</div>
+    </div>`).join('');
+}
+function togglePanelBook(name, el) {
+  const idx = panelBooks.indexOf(name);
+  if (idx>=0) panelBooks.splice(idx,1); else panelBooks.push(name);
+  el.classList.toggle('selected');
+  el.querySelector('.book-check').textContent = panelBooks.includes(name)?'✓':'';
+}
+function savePanelBooks() {
+  myBooks = [...panelBooks];
+  localStorage.setItem('oh_books', JSON.stringify(myBooks));
+  document.getElementById('booksPill').textContent = `⚙ ${myBooks.length} casas`;
+  // update value bets selector
+  const sel = document.getElementById('vbBook');
+  sel.innerHTML = myBooks.map(b=>`<option value="${b}">${b}</option>`).join('');
+  closeBooksPanel();
+}
+</script>
+</body>
+</html>
